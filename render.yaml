@@ -58,17 +58,14 @@ services:
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: next start
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
         value: "20"
-      - key: PORT
-        value: "10000"
       - key: NEXT_PUBLIC_BACKEND_HOST
         fromService:
           name: ai-studio-backend
           type: web
           property: host
-
