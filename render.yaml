@@ -5,6 +5,13 @@ databases:
     user: studio
 
 services:
+  # Redis
+  - type: redis
+    name: ai-studio-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
   # Backend API
   - type: web
     name: ai-studio-backend
@@ -20,7 +27,7 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: PORT
-        value: 4000
+        value: "10000"
       - key: DATABASE_URL
         fromDatabase:
           name: ai-studio-db
@@ -44,13 +51,6 @@ services:
           type: web
           property: host
 
-  # Redis
-  - type: redis
-    name: ai-studio-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: []
-
   # Frontend
   - type: web
     name: ai-studio-frontend
@@ -64,8 +64,11 @@ services:
         value: production
       - key: NODE_VERSION
         value: "20"
+      - key: PORT
+        value: "10000"
       - key: NEXT_PUBLIC_BACKEND_HOST
         fromService:
           name: ai-studio-backend
           type: web
           property: host
+

@@ -12,8 +12,13 @@ const nextConfig = {
         hostname: 'localhost',
         port: '4000',
       },
+      {
+        protocol: 'https',
+        hostname: '*.onrender.com',
+      },
     ],
   },
+  output: 'standalone',
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig;
