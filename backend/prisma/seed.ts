@@ -352,25 +352,30 @@ async function main() {
     },
   ];
 
-  // Создаём шаблоны с провайдерами
-  for (const t of templates) {
-    const { providers, ...templateData } = t;
-    const template = await prisma.template.create({
-      data: {
-        ...templateData,
-        isPublic: true,
-        isApproved: true,
-        compatibleProviders: {
-          create: providers.map(p => ({
-            provider: p.provider,
-            modelId: p.modelId,
-            params: p.params,
-            priority: p.provider === Provider.STABLE_DIFFUSION ? 1 : 2,
-          })),
+  // Создаём шаблоны с провайдерами (только если их ещё нет)
+  const existingCount = await prisma.template.count();
+  if (existingCount > 0) {
+    console.log(`Templates already seeded (${existingCount} found), skipping...`);
+  } else {
+    for (const t of templates) {
+      const { providers, ...templateData } = t;
+      const template = await prisma.template.create({
+        data: {
+          ...templateData,
+          isPublic: true,
+          isApproved: true,
+          compatibleProviders: {
+            create: providers.map(p => ({
+              provider: p.provider,
+              modelId: p.modelId,
+              params: p.params,
+              priority: p.provider === Provider.STABLE_DIFFUSION ? 1 : 2,
+            })),
+          },
         },
-      },
-    });
-    console.log(`Template created: ${template.name}`);
+      });
+      console.log(`Template created: ${template.name}`);
+    }
   }
 
   console.log('\n✅ Seed completed successfully!');
