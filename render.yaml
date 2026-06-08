@@ -58,7 +58,7 @@ services:
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    startCommand: next start
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
