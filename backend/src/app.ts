@@ -23,8 +23,10 @@ const app = express();
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+const frontendUrl = process.env.FRONTEND_HOST ? `https://${process.env.FRONTEND_HOST}` : (process.env.FRONTEND_URL || 'http://localhost:3000');
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: frontendUrl,
   credentials: true,
 }));
 
@@ -67,7 +69,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: frontendUrl,
     credentials: true,
   },
   pingTimeout: 60000,

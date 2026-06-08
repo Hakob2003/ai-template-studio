@@ -20,7 +20,10 @@ export function useGenerationSocket(generationId: string | null) {
   useEffect(() => {
     if (!generationId || !accessToken) return;
 
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000', {
+    const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
+    const wsURL = backendHost ? `https://${backendHost}` : (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000');
+
+    const socket = io(wsURL, {
       auth: { token: accessToken },
       transports: ['websocket', 'polling'],
     });
