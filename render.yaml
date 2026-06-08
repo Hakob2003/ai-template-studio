@@ -64,7 +64,9 @@ services:
         value: production
       - key: NODE_VERSION
         value: "20"
-      - key: NEXT_PUBLIC_BACKEND_HOST
+      - key: PORT
+        value: "10000"
+      - key: BACKEND_HOST
         fromService:
           name: ai-studio-backend
           type: web

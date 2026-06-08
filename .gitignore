@@ -1,16 +1,25 @@
+# Node & Dependencies
 node_modules/
 dist/
 .next/
+*.tsbuildinfo
+
+# Secrets & Environment Variables
 .env
 .env.local
 .env.production
 backend/.env
 frontend/.env.local
+
+# Storage & Databases
 uploads/
-*.log
-.DS_Store
 postgres_data/
 redis_data/
 minio_data/
-*.tsbuildinfo
+
+# Logs & OS Files
+*.log
+.DS_Store
+
+# Testing
 coverage/
