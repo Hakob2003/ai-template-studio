@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum Provider {
+  HUGGINGFACE
+  COMFYUI
+  STABLE_DIFFUSION
+  OLLAMA
+  MIDJOURNEY
+  LEONARDO
+  IDEOGRAM
+  OPENAI
+  GEMINI
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  avatarUrl     String?
+  role          Role      @default(USER)
+  emailVerified Boolean   @default(false)
+  verifyToken   String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  socialAccounts   SocialAccount[]
+  aiConnections    AIConnection[]
+  generations      Generation[]
+  favoriteTemplates TemplateFav[]
+  collections      Collection[]
+  auditLogs        AuditLog[]
+  subscription     Subscription?
+  purchases        TemplatePurchase[]  @relation("buyer")
+  sales            TemplatePurchase[]  @relation("seller")
+  reviews          TemplateReview[]
+  createdTemplates Template[]
+}
+
+model SocialAccount {
+  id           String   @id @default(uuid())
+  provider     String   // "google" | "github" | "discord"
+  providerId   String
+  userId       String
+  email        String?
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+model AIConnection {
+  id              String   @id @default(uuid())
+  userId          String
+  provider        Provider
+  encryptedApiKey String?  // AES-256-GCM encrypted
+  baseUrl         String?  // self-hosted endpoint
+  modelId         String?  // default model ID
+  workflow        Json?    // ComfyUI workflow
+  meta            Json?    // extra config
+  isActive        Boolean  @default(true)
+  lastTestedAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+// ==================== SUBSCRIPTIONS ====================
+
+model Subscription {
+  id          String           @id @default(uuid())
+  userId      String           @unique
+  tier        SubscriptionTier @default(FREE)
+  credits     Int              @default(20)   // monthly credits
+  usedCredits Int              @default(0)
+  expiresAt   DateTime?
+  autoRenew   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== TEMPLATES ====================
+
+model Template {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  category        String
+  systemPrompt    String
+  negativePrompt  String?
+  promptWeights   Json?
+  isPublic        Boolean  @default(true)
+  isApproved      Boolean  @default(false)
+  price           Float?   // цена в USD, если продаётся
+  createdBy       String?
+  downloadCount   Int      @default(0)
+  avgRating       Float    @default(0)
+  reviewCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  compatibleProviders TemplateProvider[]
+  generations         Generation[]
+  favorites           TemplateFav[]
+  collections         CollectionTemplate[]
+  purchases           TemplatePurchase[]
+  reviews             TemplateReview[]
+  adminCreator        User?                @relation(fields: [createdBy], references: [id])
+
+  @@index([category])
+  @@index([isPublic, isApproved])
+}
+
+model TemplateProvider {
+  id         String   @id @default(uuid())
+  templateId String
+  provider   Provider
+  modelId    String
+  params     Json?    // { steps: 30, cfg: 7, width: 1024, height: 1024, ... }
+  priority   Int      @default(0) // порядок при авто-выборе
+
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, provider])
+  @@index([templateId])
+}
+
+model TemplateFav {
+  id         String   @id @default(uuid())
+  userId     String
+  templateId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+}
+
+model Collection {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templates CollectionTemplate[]
+}
+
+model CollectionTemplate {
+  id           String   @id @default(uuid())
+  collectionId String
+  templateId   String
+  addedAt      DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  template   Template   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, templateId])
+}
+
+// ==================== GENERATIONS ====================
+
+model Generation {
+  id              String           @id @default(uuid())
+  userId          String
+  templateId      String?
+  provider        Provider
+  modelId         String
+  inputImageUrl   String?
+  generatedUrl    String?
+  prompt          String
+  negativePrompt  String?
+  params          Json
+  status          GenerationStatus @default(PENDING)
+  progress        Int              @default(0)
+  errorMessage    String?
+  retries         Int              @default(0)
+  duration        Int?             // время генерации в секундах
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+// ==================== MARKETPLACE ====================
+
+model TemplatePurchase {
+  id         String   @id @default(uuid())
+  templateId String
+  buyerId    String
+  sellerId   String
+  price      Float
+  commission Float    @default(0.1)
+  createdAt  DateTime @default(now())
+
+  template Template @relation(fields: [templateId], references: [id])
+  buyer    User     @relation("buyer", fields: [buyerId], references: [id])
+  seller   User     @relation("seller", fields: [sellerId], references: [id])
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model TemplateReview {
+  id         String   @id @default(uuid())
+  templateId String
+  userId     String
+  rating     Int      @default(5)
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  template Template @relation(fields: [templateId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, templateId])
+}
+
+// ==================== AUDIT & LOGS ====================
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

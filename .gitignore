@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+.env
+.env.local
+.env.production
+backend/.env
+frontend/.env.local
+uploads/
+*.log
+.DS_Store
+postgres_data/
+redis_data/
+minio_data/
+*.tsbuildinfo
+coverage/
