@@ -11,8 +11,8 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && npx prisma db seed && node dist/server.js
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm run seed:prod && node dist/server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -23,6 +23,11 @@ services:
         fromDatabase:
           name: ai-studio-db
           property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ai-studio-redis
+          type: redis
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: REFRESH_SECRET
@@ -32,9 +37,9 @@ services:
       - key: STORAGE_MODE
         value: local
       - key: FRONTEND_URL
-        value: https://ai-studio-frontend.onrender.com
+        sync: false
       - key: BACKEND_URL
-        value: https://ai-studio-backend.onrender.com
+        sync: false
 
   # Redis
   - type: redis
@@ -49,12 +54,12 @@ services:
     runtime: node
     plan: free
     rootDir: frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://ai-studio-backend.onrender.com/api
+        sync: false
       - key: NEXT_PUBLIC_WS_URL
-        value: https://ai-studio-backend.onrender.com
+        sync: false
