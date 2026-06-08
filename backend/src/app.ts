@@ -25,7 +25,12 @@ import morgan from 'morgan';
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-const frontendUrl = process.env.FRONTEND_HOST ? `https://${process.env.FRONTEND_HOST}` : (process.env.FRONTEND_URL || 'http://localhost:3000');
+let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+if (process.env.FRONTEND_HOST) {
+  frontendUrl = process.env.FRONTEND_HOST.includes('.') 
+    ? `https://${process.env.FRONTEND_HOST}` 
+    : `https://${process.env.FRONTEND_HOST}.onrender.com`;
+}
 
 app.use(cors({
   origin: frontendUrl,

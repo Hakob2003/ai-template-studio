@@ -20,9 +20,14 @@ const nextConfig = {
   },
   output: 'standalone',
   async rewrites() {
-    const backendUrl = process.env.BACKEND_HOST 
-      ? `https://${process.env.BACKEND_HOST}` 
-      : (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api$/, '') : 'http://localhost:4000');
+    let backendUrl = 'http://localhost:4000';
+    if (process.env.BACKEND_HOST) {
+      backendUrl = process.env.BACKEND_HOST.includes('.') 
+        ? `https://${process.env.BACKEND_HOST}` 
+        : `https://${process.env.BACKEND_HOST}.onrender.com`;
+    } else if (process.env.NEXT_PUBLIC_API_URL) {
+      backendUrl = process.env.NEXT_PUBLIC_API_URL.replace(/\/api$/, '');
+    }
     
     return [
       {
