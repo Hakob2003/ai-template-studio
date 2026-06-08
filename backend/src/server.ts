@@ -14,7 +14,7 @@ async function main() {
     await worker.waitUntilReady();
     console.log('Generation worker ready');
 
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT as number, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`WebSocket server ready`);
     });
