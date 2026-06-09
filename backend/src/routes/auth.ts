@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validate';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { authLimiter } from '../middleware/rateLimit';
+import { authLimiter, loginLimiter } from '../middleware/rateLimit';
 import * as authService from '../services/auth.service';
 import { prisma } from '../config/db';
 import { getClientIp } from '../utils/helpers';
 
 const router = Router();
 
+// Relaxed rate limit for all auth routes (refresh, me, logout, etc.)
 router.use(authLimiter);
 
 // Test endpoint for debugging
@@ -22,6 +23,7 @@ router.post('/test', (req, res) => {
 // Register
 router.post(
   '/register',
+  loginLimiter,
   validate([
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('password')
@@ -55,6 +57,7 @@ router.post(
 // Login
 router.post(
   '/login',
+  loginLimiter,
   validate([
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required'),

@@ -21,6 +21,9 @@ import { apiLimiter } from './middleware/rateLimit';
 
 const app = express();
 
+// Enable trust proxy for Render / load balancers
+app.set('trust proxy', 1);
+
 import morgan from 'morgan';
 
 // Middleware

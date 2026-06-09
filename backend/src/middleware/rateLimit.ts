@@ -8,10 +8,23 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Strict limiter ONLY for login/register — counts only failed attempts
+export const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  skipSuccessfulRequests: true, // only failed attempts count
+  message: { error: 'Too many failed login attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Relaxed limiter for other auth routes (refresh, me, logout, etc.)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20, // stricter for auth routes
-  message: { error: 'Too many authentication attempts.' },
+  max: 100, // relaxed — these are called frequently by the frontend
+  message: { error: 'Too many authentication requests.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 export const generationLimiter = rateLimit({
