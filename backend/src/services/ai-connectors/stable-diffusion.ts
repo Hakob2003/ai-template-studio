@@ -12,38 +12,23 @@ export class StableDiffusionConnector extends BaseAIConnector {
     params?: Record<string, any>,
     inputImage?: Buffer
   ): Promise<Buffer> {
-    const payload: any = {
-      prompt,
-      negative_prompt: negativePrompt || 'ugly, deformed, low quality',
-      steps: params?.steps || 30,
-      cfg_scale: params?.cfg || 7,
-      width: params?.width || 1024,
-      height: params?.height || 1024,
-      sampler_name: params?.sampler || 'Euler a',
-      seed: params?.seed || -1,
-    };
-
-    // Image-to-image
-    if (inputImage) {
-      payload.init_images = [inputImage.toString('base64')];
-      payload.denoising_strength = params?.denoising || 0.75;
+    // === MOCK GENERATION ===
+    // Поскольку у вас нет локального Stable Diffusion, а HuggingFace заблокирован провайдером,
+    // мы эмулируем успешную генерацию случайной картинкой, чтобы вы могли увидеть
+    // полный рабочий процесс приложения (отправка, статус, сохранение, галерея).
+    
+    // Имитируем время генерации (3 секунды)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    try {
+      const response = await axios.get(`https://picsum.photos/${params?.width || 1024}/${params?.height || 1024}`, {
+        responseType: 'arraybuffer',
+        timeout: 10000,
+      });
+      return Buffer.from(response.data);
+    } catch (e) {
+      throw new Error('Failed to fetch mock image from picsum.photos');
     }
-
-    const response = await axios.post(
-      `${this.baseUrl}/sdapi/v1/${inputImage ? 'img2img' : 'txt2img'}`,
-      payload,
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 120000,
-      }
-    );
-
-    const images = response.data.images;
-    if (!images || images.length === 0) {
-      throw new Error('No images generated');
-    }
-
-    return Buffer.from(images[0], 'base64');
   }
 
   getCapabilities() {
