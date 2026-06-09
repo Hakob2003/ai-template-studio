@@ -46,8 +46,8 @@ export class HuggingFaceConnector extends BaseAIConnector {
           const errorText = Buffer.from(error.response.data).toString('utf-8');
           const errorJson = JSON.parse(errorText);
           throw new Error(`HuggingFace API Error: ${errorJson.error || errorText}`);
-        } catch (e) {
-          if (e.message.startsWith('HuggingFace')) throw e;
+        } catch (e: any) {
+          if (e.message && e.message.startsWith('HuggingFace')) throw e;
           // ignore parsing error
         }
       }
