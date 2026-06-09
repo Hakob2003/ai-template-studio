@@ -66,8 +66,8 @@ export default function ConnectorsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedProvider || !apiKey) {
-      toast.error('Please fill in required fields');
+    if (!selectedProvider) {
+      toast.error('Please select a provider');
       return;
     }
 
@@ -171,14 +171,13 @@ export default function ConnectorsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">API Key *</label>
+              <label className="block text-sm font-medium mb-1">API Key (Optional for local providers)</label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your API key"
                 className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                required
               />
             </div>
 

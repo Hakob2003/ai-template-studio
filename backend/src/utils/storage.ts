@@ -6,7 +6,7 @@ import path from 'path';
 // Determine storage mode: 'local' or 's3'
 const STORAGE_MODE = process.env.STORAGE_MODE || (process.env.STORAGE_ENDPOINT ? 's3' : 'local');
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || 'http://localhost:4000';
 
 // S3/MinIO client (only initialized if using S3 mode)
 let s3: S3Client | null = null;

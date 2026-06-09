@@ -25,9 +25,9 @@ router.post('/', checkCredits, async (req: AuthRequest, res, next) => {
       },
     });
 
-    if (!connection?.encryptedApiKey) {
+    if (!connection) {
       throw new AppError(
-        `No active connection for provider "${provider}". Please configure your API key in settings.`,
+        `No active connection for provider "${provider}". Please configure it in settings.`,
         400
       );
     }

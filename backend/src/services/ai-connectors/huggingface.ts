@@ -28,16 +28,31 @@ export class HuggingFaceConnector extends BaseAIConnector {
       },
     };
 
-    const response = await axios.post(this.apiUrl, payload, {
-      headers: {
-        Authorization: `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      responseType: 'arraybuffer',
-      timeout: 120000,
-    });
+    try {
+      const response = await axios.post(this.apiUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        responseType: 'arraybuffer',
+        timeout: 120000,
+      });
 
-    return Buffer.from(response.data);
+      return Buffer.from(response.data);
+    } catch (error: any) {
+      if (error.response?.data) {
+        try {
+          // data is an ArrayBuffer because of responseType: 'arraybuffer'
+          const errorText = Buffer.from(error.response.data).toString('utf-8');
+          const errorJson = JSON.parse(errorText);
+          throw new Error(`HuggingFace API Error: ${errorJson.error || errorText}`);
+        } catch (e) {
+          if (e.message.startsWith('HuggingFace')) throw e;
+          // ignore parsing error
+        }
+      }
+      throw new Error(`HuggingFace API Error: ${error.message}`);
+    }
   }
 
   getCapabilities() {
