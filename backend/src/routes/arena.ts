@@ -29,7 +29,7 @@ router.get('/leaderboard', async (req, res) => {
 router.post(
   '/match',
   authenticate,
-  checkCredits(2), // Arena requires 2 generations
+  checkCredits, // Arena requires 2 generations, checkCredits ensures at least 1, we will check for 2 inside
   validate([
     body('prompt').isString().notEmpty().withMessage('Prompt is required'),
     body('templateId').optional().isString(),
@@ -38,6 +38,14 @@ router.post(
     try {
       const { prompt, templateId } = req.body;
       const userId = (req as any).user.userId;
+      const subscription = (req as any).subscription;
+
+      if (subscription.credits - subscription.usedCredits < 2 && (req as any).user.role !== 'ADMIN') {
+        return res.status(402).json({
+          error: 'Insufficient credits for Arena. Arena requires 2 credits.',
+          code: 'INSUFFICIENT_CREDITS',
+        });
+      }
 
       // Получаем активные коннекторы юзера
       const connections = await prisma.aIConnection.findMany({
