@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && tsc -p tsconfig.seed.json",
+    "build": "prisma generate && tsc && tsc -p tsconfig.seed.json",
     "start": "node dist/server.js",
     "seed:prod": "node dist/prisma/seed.js",
     "prisma:generate": "prisma generate",
