@@ -126,7 +126,7 @@ export default function ArenaPage() {
               </h3>
               <div className="aspect-square bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden flex flex-col items-center justify-center relative">
                 {genA?.status === 'COMPLETED' ? (
-                  <img src={genA.generatedUrl} alt="Model A" className="w-full h-full object-cover" />
+                  <img src={genA?.generatedUrl} alt="Model A" className="w-full h-full object-cover" />
                 ) : genA?.status === 'FAILED' ? (
                   <div className="text-red-500">Failed to generate</div>
                 ) : (
@@ -145,7 +145,7 @@ export default function ArenaPage() {
               </h3>
               <div className="aspect-square bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden flex flex-col items-center justify-center relative">
                 {genB?.status === 'COMPLETED' ? (
-                  <img src={genB.generatedUrl} alt="Model B" className="w-full h-full object-cover" />
+                  <img src={genB?.generatedUrl} alt="Model B" className="w-full h-full object-cover" />
                 ) : genB?.status === 'FAILED' ? (
                   <div className="text-red-500">Failed to generate</div>
                 ) : (
