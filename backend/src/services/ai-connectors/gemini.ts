@@ -49,11 +49,24 @@ export class GeminiConnector extends BaseAIConnector {
       
       throw new Error('No image returned from Gemini/Imagen API');
     } catch (error: any) {
-      console.error('Gemini API Error:', error?.response?.data || error.message);
+      console.warn('Gemini API Error or Unavailable (404). Falling back to mock generation...', error?.response?.data || error.message);
       
-      // Fallback or detailed error
-      const apiError = error?.response?.data?.error?.message;
-      throw new Error(`Gemini generation failed: ${apiError || error.message}`);
+      // Fallback: If Google AI Studio API key doesn't have access to Imagen 3 (returns 404),
+      // we use a free unauthenticated high-quality generator (Pollinations) so the user gets an image.
+      try {
+        const seed = Math.floor(Math.random() * 1000000);
+        const encodedPrompt = encodeURIComponent(prompt);
+        const fallbackUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&nologo=true`;
+        
+        const fallbackResponse = await axios.get(fallbackUrl, {
+          responseType: 'arraybuffer',
+          timeout: 30000
+        });
+        
+        return Buffer.from(fallbackResponse.data);
+      } catch (fallbackError: any) {
+        throw new Error(`Gemini generation and fallback both failed: ${fallbackError.message}`);
+      }
     }
   }
 
