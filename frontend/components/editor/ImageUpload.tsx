@@ -46,9 +46,20 @@ export function ImageUpload({ onImageUploaded, currentImage }: ImageUploadProps)
     >
       <input {...getInputProps()} />
       {currentImage ? (
-        <div className="space-y-4">
+        <div className="space-y-4 relative group">
           <img src={currentImage} alt="Uploaded" className="mx-auto max-h-48 rounded-lg shadow-sm" />
           <p className="text-sm text-gray-500">Click or drag to replace image</p>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onImageUploaded('');
+            }}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            title="Remove image"
+          >
+            ✕
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
