@@ -37,10 +37,10 @@ router.post(
   async (req, res) => {
     try {
       const { prompt, templateId } = req.body;
-      const userId = (req as any).user.userId;
+      const userId = (req as any).userId;
       const subscription = (req as any).subscription;
 
-      if (subscription.credits - subscription.usedCredits < 2 && (req as any).user.role !== 'ADMIN') {
+      if (subscription.credits - subscription.usedCredits < 2 && (req as any).role !== 'ADMIN') {
         return res.status(402).json({
           error: 'Insufficient credits for Arena. Arena requires 2 credits.',
           code: 'INSUFFICIENT_CREDITS',
@@ -160,7 +160,7 @@ router.post(
     try {
       const matchId = req.params.id;
       const { vote } = req.body;
-      const userId = (req as any).user.userId;
+      const userId = (req as any).userId;
 
       const match = await prisma.arenaMatch.findUnique({
         where: { id: matchId },
@@ -247,10 +247,10 @@ router.post(
   async (req, res) => {
     try {
       const { templateId, providerA, providerB, inputImageUrl } = req.body;
-      const userId = (req as any).user.userId;
+      const userId = (req as any).userId;
       const subscription = (req as any).subscription;
 
-      if (subscription.credits - subscription.usedCredits < 2 && (req as any).user.role !== 'ADMIN') {
+      if (subscription.credits - subscription.usedCredits < 2 && (req as any).role !== 'ADMIN') {
         return res.status(402).json({
           error: 'Insufficient credits. Direct Battle requires 2 credits.',
           code: 'INSUFFICIENT_CREDITS',
