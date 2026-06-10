@@ -355,7 +355,7 @@ async function main() {
   // Создаём шаблоны с провайдерами (только если их ещё нет)
   const existingCount = await prisma.template.count();
   if (existingCount > 0) {
-    console.log(`Templates already seeded (${existingCount} found), skipping...`);
+    console.log(`Templates already seeded (${existingCount} found), skipping creation...`);
   } else {
     for (const t of templates) {
       const { providers, ...templateData } = t;
@@ -375,6 +375,27 @@ async function main() {
         },
       });
       console.log(`Template created: ${template.name}`);
+    }
+  }
+
+  // Ensure GEMINI provider is on all templates
+  console.log('Ensuring GEMINI provider exists on all templates...');
+  const allTemplates = await prisma.template.findMany();
+  for (const t of allTemplates) {
+    const hasGemini = await prisma.templateProvider.findUnique({
+      where: { templateId_provider: { templateId: t.id, provider: Provider.GEMINI } }
+    });
+    if (!hasGemini) {
+      await prisma.templateProvider.create({
+        data: {
+          templateId: t.id,
+          provider: Provider.GEMINI,
+          modelId: 'imagen-3.0-generate-001',
+          params: { steps: 30, cfg: 7 },
+          priority: 3
+        }
+      });
+      console.log(`Added GEMINI to template: ${t.name}`);
     }
   }
 
