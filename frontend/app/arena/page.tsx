@@ -130,7 +130,7 @@ export default function ArenaPage() {
                 ) : (
                   <div className="w-3/4">
                     <p className="text-sm text-gray-500 mb-2 text-center animate-pulse">Generating image...</p>
-                    <ProgressBar progress={genA?.progress || 0} />
+                    <ProgressBar value={genA?.progress || 0} />
                   </div>
                 )}
               </div>
@@ -149,7 +149,7 @@ export default function ArenaPage() {
                 ) : (
                   <div className="w-3/4">
                     <p className="text-sm text-gray-500 mb-2 text-center animate-pulse">Generating image...</p>
-                    <ProgressBar progress={genB?.progress || 0} />
+                    <ProgressBar value={genB?.progress || 0} />
                   </div>
                 )}
               </div>
