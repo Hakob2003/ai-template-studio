@@ -233,4 +233,106 @@ router.post(
   }
 );
 
+// POST /api/arena/direct-match
+router.post(
+  '/direct-match',
+  authenticate,
+  checkCredits,
+  validate([
+    body('templateId').isString().notEmpty().withMessage('Template ID is required'),
+    body('providerA').isString().notEmpty().withMessage('Provider A is required'),
+    body('providerB').isString().notEmpty().withMessage('Provider B is required'),
+    body('inputImageUrl').optional({ nullable: true }).isString(),
+  ]),
+  async (req, res) => {
+    try {
+      const { templateId, providerA, providerB, inputImageUrl } = req.body;
+      const userId = (req as any).user.userId;
+      const subscription = (req as any).subscription;
+
+      if (subscription.credits - subscription.usedCredits < 2 && (req as any).user.role !== 'ADMIN') {
+        return res.status(402).json({
+          error: 'Insufficient credits. Direct Battle requires 2 credits.',
+          code: 'INSUFFICIENT_CREDITS',
+        });
+      }
+
+      // Check active connections for both
+      const connA = await prisma.aIConnection.findUnique({
+        where: { userId_provider: { userId, provider: providerA } },
+      });
+      const connB = await prisma.aIConnection.findUnique({
+        where: { userId_provider: { userId, provider: providerB } },
+      });
+
+      if (!connA || !connA.isActive || !connB || !connB.isActive) {
+        return res.status(400).json({ error: 'You need active AI connectors for both selected providers' });
+      }
+
+      // Fetch template
+      const template = await prisma.template.findUnique({
+        where: { id: templateId },
+        include: { compatibleProviders: true },
+      });
+
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      const tpA = template.compatibleProviders.find(tp => tp.provider === providerA);
+      const tpB = template.compatibleProviders.find(tp => tp.provider === providerB);
+
+      if (!tpA || !tpB) {
+        return res.status(400).json({ error: 'One or both selected providers are not compatible with this template' });
+      }
+
+      // Create generations
+      const genA = await prisma.generation.create({
+        data: {
+          userId,
+          templateId,
+          prompt: template.systemPrompt,
+          negativePrompt: template.negativePrompt || '',
+          inputImageUrl: inputImageUrl || null,
+          provider: providerA,
+          modelId: tpA.modelId || 'default',
+          params: tpA.params || {},
+          status: 'PENDING',
+        },
+      });
+
+      const genB = await prisma.generation.create({
+        data: {
+          userId,
+          templateId,
+          prompt: template.systemPrompt,
+          negativePrompt: template.negativePrompt || '',
+          inputImageUrl: inputImageUrl || null,
+          provider: providerB,
+          modelId: tpB.modelId || 'default',
+          params: tpB.params || {},
+          status: 'PENDING',
+        },
+      });
+
+      // Send to queue
+      await generationQueue.add('generate', { generationId: genA.id });
+      await generationQueue.add('generate', { generationId: genB.id });
+
+      // Deduct credits
+      await prisma.subscription.update({
+        where: { userId },
+        data: { usedCredits: { increment: 2 } },
+      });
+
+      res.status(201).json({
+        generationAId: genA.id,
+        generationBId: genB.id,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 export default router;

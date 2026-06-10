@@ -21,6 +21,9 @@ export function Navbar() {
             <Link href="/arena" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold flex items-center">
               <span>⚔️ Arena</span>
             </Link>
+            <Link href="/arena/direct" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold flex items-center">
+              <span>⚡ Direct Battle</span>
+            </Link>
             <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400">
               Marketplace
             </Link>
