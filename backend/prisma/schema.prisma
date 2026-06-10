@@ -151,6 +151,7 @@ model Template {
   collections         CollectionTemplate[]
   purchases           TemplatePurchase[]
   reviews             TemplateReview[]
+  arenaMatches        ArenaMatch[]
   adminCreator        User?                @relation(fields: [createdBy], references: [id])
 
   @@index([category])
