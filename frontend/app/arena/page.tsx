@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useGenerationSocket } from '@/hooks/useGenerationSocket';
@@ -17,7 +16,6 @@ interface LeaderboardEntry {
 }
 
 export default function ArenaPage() {
-  const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   
