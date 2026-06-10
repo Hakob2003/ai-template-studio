@@ -28,8 +28,8 @@ export default function ArenaPage() {
   const [isVoted, setIsVoted] = useState(false);
   const [revealedNames, setRevealedNames] = useState<{ modelA: string, modelB: string } | null>(null);
 
-  const { generation: genA } = useGenerationSocket(genAId);
-  const { generation: genB } = useGenerationSocket(genBId);
+  const genA = useGenerationSocket(genAId);
+  const genB = useGenerationSocket(genBId);
 
   useEffect(() => {
     fetchLeaderboard();
