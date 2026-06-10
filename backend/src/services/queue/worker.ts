@@ -35,17 +35,13 @@ const worker = new Worker(
       // Обновляем статус
       await updateProgress(generationId, 'PROCESSING', 10);
 
-      // Находим AI подключение
-      const connection = gen.user.aiConnections.find(
-        c => c.provider === gen.provider && c.isActive
+      const templateProvider = gen.template?.compatibleProviders.find(
+        tp => tp.provider === gen.provider
       );
-
-      if (!connection) {
-        throw new Error(`No active connection for provider: ${gen.provider}`);
-      }
+      const mergedParams = { ...(templateProvider?.params as any || {}), ...(gen.params as any || {}) };
 
       // Создаём коннектор
-      const connector = createConnector(connection);
+      const connector = createConnector(gen.provider, gen.modelId, mergedParams);
 
       // Анализ входного изображения
       let finalPrompt = gen.prompt || gen.template?.systemPrompt || '';
@@ -55,11 +51,10 @@ const worker = new Worker(
         await updateProgress(generationId, 'PROCESSING', 20);
 
         const imageBuffer = await fetchImage(gen.inputImageUrl);
+        // Using global API key for analysis if needed (e.g., GEMINI_API_KEY)
         const analysis = await analyzeImage(
           imageBuffer,
-          connection.encryptedApiKey
-            ? (await import('../../utils/crypto')).decrypt(connection.encryptedApiKey)
-            : null
+          process.env.GEMINI_API_KEY || null
         );
 
         if (finalPrompt) {
@@ -78,12 +73,6 @@ const worker = new Worker(
       const inputImage = gen.inputImageUrl
         ? await fetchImage(gen.inputImageUrl)
         : undefined;
-
-      const params = (gen.params as any) || {};
-      const templateProvider = gen.template?.compatibleProviders.find(
-        tp => tp.provider === gen.provider
-      );
-      const mergedParams = { ...(templateProvider?.params as any || {}), ...params };
 
       const resultBuffer = await connector.generate(
         finalPrompt,

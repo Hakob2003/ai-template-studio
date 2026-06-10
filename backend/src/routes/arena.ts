@@ -47,21 +47,10 @@ router.post(
         });
       }
 
-      // Получаем активные коннекторы юзера
-      const connections = await prisma.aIConnection.findMany({
-        where: { userId, isActive: true },
-      });
-
-      if (connections.length < 2) {
-        return res.status(400).json({ error: 'You need at least 2 active AI connectors to play Arena' });
-      }
-
-      // Выбираем 2 случайных провайдера из доступных
-      const shuffled = connections.sort(() => 0.5 - Math.random());
-      const connA = shuffled[0];
-      const connB = shuffled[1];
-
-      // Если есть templateId, проверим, есть ли он и какие у него параметры
+      let providerA: string;
+      let providerB: string;
+      let modelA: string = 'default';
+      let modelB: string = 'default';
       let paramsA: any = {};
       let paramsB: any = {};
       let finalPrompt = prompt;
@@ -72,15 +61,28 @@ router.post(
           include: { compatibleProviders: true },
         });
 
-        if (template) {
-          finalPrompt = `${template.systemPrompt} ${prompt}`;
-          
-          const tpA = template.compatibleProviders.find(tp => tp.provider === connA.provider);
-          if (tpA) paramsA = tpA.params || {};
-
-          const tpB = template.compatibleProviders.find(tp => tp.provider === connB.provider);
-          if (tpB) paramsB = tpB.params || {};
+        if (!template || template.compatibleProviders.length < 2) {
+          return res.status(400).json({ error: 'Template not found or has less than 2 compatible providers' });
         }
+
+        const shuffledTp = template.compatibleProviders.sort(() => 0.5 - Math.random());
+        const tpA = shuffledTp[0];
+        const tpB = shuffledTp[1];
+
+        providerA = tpA.provider;
+        modelA = tpA.modelId;
+        paramsA = tpA.params || {};
+
+        providerB = tpB.provider;
+        modelB = tpB.modelId;
+        paramsB = tpB.params || {};
+
+        finalPrompt = `${template.systemPrompt} ${prompt}`;
+      } else {
+        const AVAILABLE_PROVIDERS = [Provider.HUGGINGFACE, Provider.STABLE_DIFFUSION, Provider.COMFYUI, Provider.GEMINI];
+        const shuffled = [...AVAILABLE_PROVIDERS].sort(() => 0.5 - Math.random());
+        providerA = shuffled[0];
+        providerB = shuffled[1];
       }
 
       // Создаём генерации
@@ -89,8 +91,8 @@ router.post(
           userId,
           templateId,
           prompt: finalPrompt,
-          provider: connA.provider,
-          modelId: connA.modelId || 'default',
+          provider: providerA as any,
+          modelId: modelA,
           params: paramsA,
           status: 'PENDING',
         },
@@ -101,8 +103,8 @@ router.post(
           userId,
           templateId,
           prompt: finalPrompt,
-          provider: connB.provider,
-          modelId: connB.modelId || 'default',
+          provider: providerB as any,
+          modelId: modelB,
           params: paramsB,
           status: 'PENDING',
         },
@@ -114,8 +116,8 @@ router.post(
           userId,
           templateId,
           prompt: finalPrompt,
-          modelA: connA.provider,
-          modelB: connB.provider,
+          modelA: providerA as any,
+          modelB: providerB as any,
           generationAId: genA.id,
           generationBId: genB.id,
         },
@@ -257,17 +259,7 @@ router.post(
         });
       }
 
-      // Check active connections for both
-      const connA = await prisma.aIConnection.findUnique({
-        where: { userId_provider: { userId, provider: providerA } },
-      });
-      const connB = await prisma.aIConnection.findUnique({
-        where: { userId_provider: { userId, provider: providerB } },
-      });
-
-      if (!connA || !connA.isActive || !connB || !connB.isActive) {
-        return res.status(400).json({ error: 'You need active AI connectors for both selected providers' });
-      }
+      // AIConnection checks removed - using global API keys
 
       // Fetch template
       const template = await prisma.template.findUnique({

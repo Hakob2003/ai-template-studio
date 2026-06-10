@@ -31,7 +31,6 @@ export default function DirectArenaPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
   
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [selectedProviderA, setSelectedProviderA] = useState<string>('');
@@ -66,13 +65,9 @@ export default function DirectArenaPage() {
       return;
     }
 
-    Promise.all([
-      api.get('/templates?limit=100'),
-      api.get('/connectors'),
-    ])
-      .then(([templateRes, connRes]) => {
+      api.get('/templates?limit=100')
+      .then((templateRes) => {
         setTemplates(templateRes.data.templates || []);
-        setConnections(connRes.data.filter((c: Connection) => c.isActive));
       })
       .catch((err) => {
         toast.error('Failed to load data');
@@ -125,10 +120,9 @@ export default function DirectArenaPage() {
 
   const activeTemplate = templates.find(t => t.id === selectedTemplate);
   
-  // Filter available providers based on template and connections
   const availableProviders = activeTemplate 
-    ? activeTemplate.compatibleProviders.filter(tp => connections.some(c => c.provider === tp.provider && c.isActive))
-    : connections;
+    ? activeTemplate.compatibleProviders
+    : [];
     
   return (
     <div className='max-w-6xl mx-auto py-12 px-4 space-y-12 animate-fade-in'>
@@ -183,11 +177,8 @@ export default function DirectArenaPage() {
             {availableProviders.length < 2 ? (
               <div className='p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg'>
                 <p className='text-yellow-800 dark:text-yellow-200'>
-                  You need at least 2 active AI connectors compatible with this template.
+                  This template does not have enough compatible providers for a battle.
                 </p>
-                <Button onClick={() => router.push('/profile/connectors')} variant='outline' size='sm' className='mt-2'>
-                  Connect AI Services
-                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

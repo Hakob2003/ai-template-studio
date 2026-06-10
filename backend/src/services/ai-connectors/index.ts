@@ -1,5 +1,4 @@
-import { AIConnection, Provider } from '@prisma/client';
-import { decrypt } from '../../utils/crypto';
+import { Provider } from '@prisma/client';
 import { HuggingFaceConnector } from './huggingface';
 import { ComfyUIConnector } from './comfyui';
 import { StableDiffusionConnector } from './stable-diffusion';
@@ -7,31 +6,32 @@ import { OllamaConnector } from './ollama';
 import { GeminiConnector } from './gemini';
 import { BaseAIConnector } from './base';
 
-export function createConnector(connection: AIConnection): BaseAIConnector {
-  const apiKey = connection.encryptedApiKey
-    ? decrypt(connection.encryptedApiKey)
-    : undefined;
+export function createConnector(provider: string, modelId?: string, params?: any): BaseAIConnector {
+  let apiKey: string | undefined;
+  let baseUrl: string | undefined;
 
-  const config = {
-    apiKey,
-    baseUrl: connection.baseUrl || undefined,
-    modelId: connection.modelId || undefined,
-    workflow: (connection.workflow as any) || undefined,
-    meta: (connection.meta as any) || {},
-  };
-
-  switch (connection.provider) {
+  switch (provider) {
     case Provider.HUGGINGFACE:
-      return new HuggingFaceConnector(config);
+      apiKey = process.env.HUGGINGFACE_API_KEY;
+      return new HuggingFaceConnector({ apiKey, modelId });
+      
     case Provider.COMFYUI:
-      return new ComfyUIConnector(config);
+      baseUrl = process.env.COMFYUI_BASE_URL || 'http://localhost:8188';
+      return new ComfyUIConnector({ baseUrl, modelId, workflow: params?.workflow });
+      
     case Provider.STABLE_DIFFUSION:
-      return new StableDiffusionConnector(config);
+      apiKey = process.env.STABILITY_API_KEY || process.env.STABLE_DIFFUSION_API_KEY;
+      return new StableDiffusionConnector({ apiKey, modelId });
+      
     case Provider.OLLAMA:
-      return new OllamaConnector(config);
+      baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      return new OllamaConnector({ baseUrl, modelId });
+      
     case Provider.GEMINI:
-      return new GeminiConnector(config);
+      apiKey = process.env.GEMINI_API_KEY;
+      return new GeminiConnector({ apiKey, modelId });
+      
     default:
-      throw new Error(`Unsupported provider: ${connection.provider}`);
+      throw new Error(`Unsupported provider: ${provider}`);
   }
 }

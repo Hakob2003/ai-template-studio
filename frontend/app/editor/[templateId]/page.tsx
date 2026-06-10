@@ -35,7 +35,6 @@ export default function EditorPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   const [template, setTemplate] = useState<Template | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
@@ -64,17 +63,11 @@ export default function EditorPage() {
       return;
     }
 
-    Promise.all([
-      api.get('/templates/' + templateId),
-      api.get('/connectors'),
-    ])
-      .then(([templateRes, connRes]) => {
+      api.get('/templates/' + templateId)
+      .then((templateRes) => {
         setTemplate(templateRes.data);
-        setConnections(connRes.data.filter((c: Connection) => c.isActive));
 
-        const available = templateRes.data.compatibleProviders.filter((tp: any) =>
-          connRes.data.some((c: Connection) => c.provider === tp.provider && c.isActive)
-        );
+        const available = templateRes.data.compatibleProviders;
 
         if (available.length > 0) {
           setSelectedProvider(available[0].provider);
@@ -102,7 +95,7 @@ export default function EditorPage() {
 
   const handleGenerate = async () => {
     if (!selectedProvider) {
-      toast.error('Please select a provider and connect your account');
+      toast.error('Please select a provider');
       return;
     }
 
@@ -153,9 +146,7 @@ export default function EditorPage() {
     );
   }
 
-  const availableProviders = template.compatibleProviders.filter((tp) =>
-    connections.some((c) => c.provider === tp.provider && c.isActive)
-  );
+  const availableProviders = template.compatibleProviders;
 
   return (
     <div className='max-w-4xl mx-auto space-y-8 animate-fade-in'>
@@ -193,16 +184,8 @@ export default function EditorPage() {
         ) : (
           <div className='p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg'>
             <p className='text-yellow-800 dark:text-yellow-200'>
-              No active connections found for this template&apos;s compatible providers.
+              No compatible providers found for this template.
             </p>
-            <Button
-              onClick={() => router.push('/profile/connectors')}
-              variant='outline'
-              size='sm'
-              className='mt-2'
-            >
-              Connect AI Services
-            </Button>
           </div>
         )}
       </div>

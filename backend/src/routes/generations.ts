@@ -16,21 +16,7 @@ router.post('/', checkCredits, async (req: AuthRequest, res, next) => {
   try {
     const { templateId, provider, modelId, inputImageUrl, inputGenerationId, params } = req.body;
 
-    // Проверяем наличие подключения
-    const connection = await prisma.aIConnection.findFirst({
-      where: {
-        userId: req.userId!,
-        provider,
-        isActive: true,
-      },
-    });
-
-    if (!connection) {
-      throw new AppError(
-        `No active connection for provider "${provider}". Please configure it in settings.`,
-        400
-      );
-    }
+    // Removed AIConnection check - using global API keys
 
     // Получаем шаблон если указан
     let template = null;
@@ -82,7 +68,7 @@ router.post('/', checkCredits, async (req: AuthRequest, res, next) => {
         userId: req.userId!,
         templateId: templateId || null,
         provider,
-        modelId: modelId || connection.modelId || 'default',
+        modelId: modelId || 'default',
         inputImageUrl: finalInputImageUrl || null,
         prompt: prompt || '',
         negativePrompt: negativePrompt || '',

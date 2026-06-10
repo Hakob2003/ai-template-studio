@@ -61,7 +61,7 @@ export default function ArenaPage() {
       setGenBId(data.generationBId);
       toast.success('Battle started!');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to start battle. Do you have at least 2 connectors?');
+      toast.error(error.response?.data?.error || 'Failed to start battle.');
     }
   };
 
