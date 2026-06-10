@@ -207,15 +207,18 @@ export default function EditorPage() {
         )}
       </div>
 
-      {generationId && progress && (
-        <div className='space-y-2'>
+      {(isGenerating || progress) && (
+        <div className='space-y-2 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg'>
           <div className='flex justify-between text-sm'>
             <span>
-              Status: <span className='font-medium'>{progress.status}</span>
+              Status: <span className='font-medium'>{progress?.status || 'STARTING'}</span>
             </span>
-            <span>{progress.progress}%</span>
+            <span>{progress?.progress || 0}%</span>
           </div>
-          <ProgressBar value={progress.progress} />
+          <ProgressBar value={progress?.progress || 0} />
+          {isGenerating && (!progress || progress.progress === 0) && (
+             <p className="text-xs text-gray-500 text-center mt-2 animate-pulse">Connecting to AI service...</p>
+          )}
         </div>
       )}
 

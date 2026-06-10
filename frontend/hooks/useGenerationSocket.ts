@@ -19,6 +19,9 @@ export function useGenerationSocket(generationId: string | null) {
 
   useEffect(() => {
     if (!generationId || !accessToken) return;
+    
+    // Reset progress when a new generation starts
+    setProgress(null);
 
     const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
     const wsURL = backendHost ? `https://${backendHost}` : (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000');
