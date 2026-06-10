@@ -69,6 +69,7 @@ model User {
   sales            TemplatePurchase[]  @relation("seller")
   reviews          TemplateReview[]
   createdTemplates Template[]
+  arenaMatches     ArenaMatch[]
 }
 
 model SocialAccount {
@@ -230,6 +231,9 @@ model Generation {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   template Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
+  arenaMatchA ArenaMatch? @relation("MatchGenA")
+  arenaMatchB ArenaMatch? @relation("MatchGenB")
+
   @@index([userId, createdAt])
   @@index([status])
 }
@@ -284,4 +288,38 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ==================== ARENA ====================
+
+model ArenaMatch {
+  id            String   @id @default(uuid())
+  userId        String
+  templateId    String?
+  prompt        String
+  modelA        Provider
+  modelB        Provider
+  generationAId String   @unique
+  generationBId String   @unique
+  winner        String?  // 'A', 'B', 'TIE', 'BOTH_BAD', null if pending
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template      Template?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  generationA   Generation @relation("MatchGenA", fields: [generationAId], references: [id])
+  generationB   Generation @relation("MatchGenB", fields: [generationBId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ProviderStats {
+  provider      Provider @id
+  wins          Int      @default(0)
+  losses        Int      @default(0)
+  ties          Int      @default(0)
+  eloRating     Int      @default(1200)
+  matchesPlayed Int      @default(0)
+  updatedAt     DateTime @updatedAt
 }

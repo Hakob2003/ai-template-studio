@@ -15,12 +15,15 @@ export function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center space-x-8">
-          <Link href="/gallery" className="text-sm font-medium hover:text-primary-600">
-            Gallery
-          </Link>
-          <Link href="/marketplace" className="text-sm font-medium hover:text-primary-600">
-            Marketplace
-          </Link>
+            <Link href="/gallery" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400">
+              Gallery
+            </Link>
+            <Link href="/arena" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-semibold flex items-center">
+              <span>⚔️ Arena</span>
+            </Link>
+            <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400">
+              Marketplace
+            </Link>
           {user && (
             <Link href="/dashboard" className="text-sm font-medium hover:text-primary-600">
               Dashboard

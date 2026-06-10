@@ -16,6 +16,7 @@ import connectorRoutes from './routes/connectors';
 import profileRoutes from './routes/profile';
 import uploadRoutes from './routes/upload';
 import marketplaceRoutes from './routes/marketplace';
+import arenaRoutes from './routes/arena';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimit';
 
@@ -61,6 +62,7 @@ app.use('/api/connectors', connectorRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/arena', arenaRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
