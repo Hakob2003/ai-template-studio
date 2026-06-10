@@ -4,6 +4,7 @@ import { HuggingFaceConnector } from './huggingface';
 import { ComfyUIConnector } from './comfyui';
 import { StableDiffusionConnector } from './stable-diffusion';
 import { OllamaConnector } from './ollama';
+import { GeminiConnector } from './gemini';
 import { BaseAIConnector } from './base';
 
 export function createConnector(connection: AIConnection): BaseAIConnector {
@@ -28,6 +29,8 @@ export function createConnector(connection: AIConnection): BaseAIConnector {
       return new StableDiffusionConnector(config);
     case Provider.OLLAMA:
       return new OllamaConnector(config);
+    case Provider.GEMINI:
+      return new GeminiConnector(config);
     default:
       throw new Error(`Unsupported provider: ${connection.provider}`);
   }
